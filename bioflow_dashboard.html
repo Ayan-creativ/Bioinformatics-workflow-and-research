@@ -1,0 +1,238 @@
+
+<h2 class="sr-only">BioFlow — interactive bioinformatics research dashboard with workflow explorer, biomarker table, and competitor tools panels</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:600px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary)}
+.sidebar{background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-tertiary);padding:20px 0;display:flex;flex-direction:column;gap:2px}
+.sidebar-header{padding:0 16px 16px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:8px}
+.sidebar-title{font-size:13px;font-weight:500;color:var(--color-text-primary);letter-spacing:0.04em;text-transform:uppercase}
+.sidebar-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;font-size:13px;color:var(--color-text-secondary);border-radius:0;transition:background 0.1s;border-left:2px solid transparent}
+.nav-item:hover{background:var(--color-background-primary);color:var(--color-text-primary)}
+.nav-item.active{background:var(--color-background-primary);color:var(--color-text-primary);border-left:2px solid #1D9E75;font-weight:500}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:0.5;flex-shrink:0}
+.nav-item.active .nav-dot{opacity:1;background:#1D9E75}
+.main{display:flex;flex-direction:column;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.topbar-title{font-size:16px;font-weight:500;color:var(--color-text-primary)}
+.topbar-badge{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--color-background-success);color:var(--color-text-success);font-weight:500}
+.content{padding:24px;overflow-y:auto;flex:1}
+.section{display:none}
+.section.active{display:block}
+.filter-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.filter-label{font-size:12px;color:var(--color-text-secondary);font-weight:500}
+select{font-size:13px;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer}
+.workflow-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.wf-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px}
+.wf-step{font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-weight:500}
+.wf-tools{display:flex;flex-wrap:wrap;gap:4px}
+.tool-pill{font-size:11px;padding:2px 7px;border-radius:20px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary)}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:8px 12px;font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.06em;border-bottom:0.5px solid var(--color-border-tertiary)}
+.data-table td{padding:9px 12px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:top}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--color-background-secondary)}
+.marker-tag{display:inline-block;font-size:11px;padding:2px 6px;border-radius:4px;background:var(--color-background-info);color:var(--color-text-info);margin:1px;font-weight:500}
+.db-tag{display:inline-block;font-size:11px;padding:2px 6px;border-radius:4px;background:var(--color-background-tertiary);color:var(--color-text-secondary);margin:1px}
+.comp-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:12px}
+.comp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.comp-name{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.comp-funding{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--color-background-warning);color:var(--color-text-warning);font-weight:500}
+.comp-focus{font-size:12px;color:var(--color-text-secondary);margin-bottom:8px}
+.comp-products{display:flex;flex-wrap:wrap;gap:4px}
+.prod-pill{font-size:11px;padding:2px 7px;border-radius:20px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary)}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px}
+.stat-label{font-size:11px;color:var(--color-text-tertiary);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em}
+.stat-val{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.empty{text-align:center;padding:40px;color:var(--color-text-tertiary);font-size:13px}
+</style>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">BioFlow</div>
+      <div class="sidebar-sub">Research Dashboard</div>
+    </div>
+    <div class="nav-item active" onclick="switchSection('workflows',this)"><span class="nav-dot"></span>Workflows</div>
+    <div class="nav-item" onclick="switchSection('biomarkers',this)"><span class="nav-dot"></span>Biomarkers</div>
+    <div class="nav-item" onclick="switchSection('competitors',this)"><span class="nav-dot"></span>Competitors</div>
+    <div class="nav-item" onclick="switchSection('llms',this)"><span class="nav-dot"></span>GenAI / LLMs</div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title" id="section-title">Bioinformatics Workflows</span>
+      <span class="topbar-badge" id="section-badge">Live data</span>
+    </div>
+    <div class="content">
+
+      <!-- WORKFLOWS -->
+      <div class="section active" id="sec-workflows">
+        <div class="filter-row">
+          <span class="filter-label">Workflow</span>
+          <select id="wf-select" onchange="renderWorkflow()">
+            <option value="ngs">NGS</option>
+            <option value="metagenomics">Metagenomics</option>
+            <option value="metatranscriptomics">Metatranscriptomics</option>
+            <option value="network">Network Analysis</option>
+            <option value="systems">Systems Biology</option>
+            <option value="synthetic">Synthetic Biology</option>
+            <option value="genetic">Genetic Engineering</option>
+            <option value="vcf">VCF Analysis</option>
+          </select>
+        </div>
+        <div class="workflow-grid" id="workflow-grid"></div>
+      </div>
+
+      <!-- BIOMARKERS -->
+      <div class="section" id="sec-biomarkers">
+        <div class="filter-row">
+          <span class="filter-label">Filter organ</span>
+          <select id="bm-filter" onchange="renderBiomarkers()">
+            <option value="all">All systems</option>
+            <option value="Thyroid">Thyroid</option>
+            <option value="Lung">Lung</option>
+            <option value="Breast">Breast</option>
+            <option value="Liver">Liver / Bile Duct</option>
+            <option value="Colorectal">Colorectal</option>
+            <option value="Prostate">Prostate</option>
+          </select>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Organ / System</th><th>Tumor markers</th><th>Detection method</th><th>Databases</th></tr></thead>
+          <tbody id="bm-body"></tbody>
+        </table>
+      </div>
+
+      <!-- COMPETITORS -->
+      <div class="section" id="sec-competitors">
+        <div class="stat-row">
+          <div class="stat-card"><div class="stat-label">Companies tracked</div><div class="stat-val">5</div></div>
+          <div class="stat-card"><div class="stat-label">Total funding (est.)</div><div class="stat-val">$957M+</div></div>
+          <div class="stat-card"><div class="stat-label">In clinical trials</div><div class="stat-val">3</div></div>
+          <div class="stat-card"><div class="stat-label">AI architecture types</div><div class="stat-val">4</div></div>
+        </div>
+        <div id="comp-list"></div>
+      </div>
+
+      <!-- LLMS -->
+      <div class="section" id="sec-llms">
+        <table class="data-table">
+          <thead><tr><th>Model / Company</th><th>Category</th><th>Architecture</th><th>Strengths</th><th>Limitations</th></tr></thead>
+          <tbody id="llm-body"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const workflows={
+  ngs:{title:"NGS",steps:{"Data Analysis":["FASTQC","MultiQC","Trimmomatic","Cutadapt"],"Alignment":["BWA","Bowtie2","STAR","HISAT2"],"Variant Calling":["GATK","FreeBayes","SAMtools"],"Assembly":["SPAdes","MEGAHIT","SOAPdenovo"],"Annotation":["Prokka","RAST","SnpEff"]}},
+  metagenomics:{title:"Metagenomics",steps:{"Preprocessing":["SortMeRNA","Trimmomatic","Fastp"],"Assembly":["Trinity","MEGAHIT"],"Quantification":["Salmon","Kallisto","RSEM"],"Functional Annotation":["eggNOG-mapper","KEGG Mapper","InterProScan"],"Pathway Analysis":["MetaCyc","MapMan"]}},
+  metatranscriptomics:{title:"Metatranscriptomics",steps:{"Preprocessing":["SortMeRNA","Trimmomatic","Fastp"],"Assembly":["Trinity","MEGAHIT"],"Quantification":["Salmon","Kallisto","RSEM"],"Functional Annotation":["eggNOG-mapper","KEGG Mapper","InterProScan"],"Pathway Analysis":["MetaCyc","MapMan"]}},
+  network:{title:"Network Analysis",steps:{"Network Visualization":["Cytoscape","Gephi"],"Graph Analysis":["igraph (R/Python)","NetworkX"],"Functional Enrichment":["STRING","GeneMANIA"],"Dynamic Modeling":["Pajek","BioGRID"]}},
+  systems:{title:"Systems Biology",steps:{"Modeling Tools":["COPASI","CellDesigner","MATLAB SimBiology"],"Pathway Databases":["KEGG","Reactome","BioCyc"],"Simulation":["SBML","VCell","OpenSim"],"Omics Integration":["MetaboAnalyst","Cytoscape"]}},
+  synthetic:{title:"Synthetic Biology",steps:{"Design Tools":["BioCAD","Gene Designer","TinkerCell"],"Simulation & Modeling":["iBioSim","SynBioSS","COPASI"],"DNA Assembly":["Golden Gate","Gibson Assembly"],"Pathway Design":["SBOL","SBW"]}},
+  genetic:{title:"Genetic Engineering",steps:{"Design & Simulation":["Benchling","Geneious","SnapGene"],"CRISPR Tools":["CRISPResso","CHOPCHOP","Cas-OFFinder"],"Primer Design":["Primer3","OligoAnalyzer"],"Cloning Tools":["ApE","PlasMapper"]}},
+  vcf:{title:"VCF Analysis",steps:{"VCF Manipulation":["VCFtools","BCFtools"],"Annotation":["ANNOVAR","SnpEff","VEP"],"Visualization":["IGV","JBrowse"],"Comparative Analysis":["bedtools","GATK"]}}
+};
+
+const biomarkers=[
+  {organ:"Thyroid",markers:["CEA","Thyroglobulin"],detection:"Blood test (serum marker analysis)",db:["CGMD","TCGA"]},
+  {organ:"Lung",markers:["CEA","CA-125","Cyfra 21-1"],detection:"Blood test, biopsy, imaging (CT)",db:["CPTAC","ICGC"]},
+  {organ:"Breast",markers:["CEA","CA 15-3"],detection:"Blood test, mammography, ultrasound",db:["CGMD","KEGG","UniProtKB"]},
+  {organ:"Esophagus",markers:["CEA","CSS"],detection:"Blood test, endoscopy",db:["TCGA","COSMIC"]},
+  {organ:"Liver / Bile Duct",markers:["CEA","AFP","CA 19-9"],detection:"Blood test, ultrasound, CT",db:["HCCDB","CGMD"]},
+  {organ:"Stomach / Pancreas",markers:["CEA","CA 19-9","CA 72-4"],detection:"Blood test, endoscopy, imaging",db:["TCGA","Pancreatic Expression DB"]},
+  {organ:"Colorectal",markers:["CEA","CA 19-9","M2-PK"],detection:"Blood test, stool test, colonoscopy",db:["CPTAC"]},
+  {organ:"Ovaries",markers:["CA-125","CA 72-4"],detection:"Blood test, pelvic ultrasound",db:["TCGA"]},
+  {organ:"Uterus",markers:["CEA","CA-125","SCC"],detection:"Blood test, pelvic ultrasound",db:["CGMD"]},
+  {organ:"Prostate",markers:["PSA","FPSA"],detection:"Blood test (PSA), digital rectal exam",db:["Prostate Cancer Transcriptome Atlas"]},
+  {organ:"Testis",markers:["AFP","BHCG"],detection:"Blood test, ultrasound",db:["CGMD"]},
+  {organ:"Metastasis to Bone",markers:["CEA"],detection:"Blood test, bone scan",db:["COSMIC"]}
+];
+
+const competitors=[
+  {name:"Insilico Medicine",focus:"AI-driven drug discovery",funding:"$402M raised, ~$895M valuation",products:["PandaOmics","Chemistry42","inClinico","Pharma.AI"],note:"Phase IIa trials for IPF (ISM001-055). Pioneer in generative biology."},
+  {name:"Converge Bio",focus:"Generative AI for drug discovery",funding:"$5.5M seed",products:["Antibody engineering platform","mRNA vaccine design","Target ID"],note:"AWS GenAI accelerator. Collaborations with Teva & Compugen."},
+  {name:"Benchling",focus:"R&D cloud platform for life sciences",funding:"$200M Series F, ~$6B valuation",products:["R&D Cloud","Molecular design tools","Data management"],note:"Well-established, lacks direct AI focus vs. newer competitors."},
+  {name:"BenevolentAI",focus:"AI-assisted drug discovery",funding:"$200M+ raised, ~$1B valuation",products:["AI-driven drug discovery platform"],note:"Extensive datasets, challenges in translating AI findings to clinical success."},
+  {name:"Isomorphic Labs",focus:"AI in drug discovery",funding:"$50M raised",products:["Proprietary AI molecular interaction models"],note:"Backed by DeepMind. Cutting edge but still developing market presence."}
+];
+
+const llms=[
+  {name:"AlphaFold (DeepMind)",cat:"Protein Prediction",arch:"Transformer / Evoformer",strengths:"High accuracy, generalizes to unknown proteins",limits:"Computationally expensive, struggles with disordered proteins"},
+  {name:"ESMFold (Meta)",cat:"Protein Folding",arch:"Masked Language Model (MLM)",strengths:"Faster than physics-based methods like Rosetta",limits:"May lack interpretability for complex domains"},
+  {name:"Insilico Medicine",cat:"Drug Molecule Design",arch:"GNN + Reinforcement Learning",strengths:"Faster drug candidate discovery, cost-effective",limits:"Requires extensive validation, prone to bias"},
+  {name:"RoseTTAFold",cat:"Protein Prediction",arch:"Transformer-based deep learning",strengths:"Open-source, high accuracy on diverse sequences",limits:"Slower than ESMFold for large-scale inference"},
+  {name:"Atomwise",cat:"Drug Molecule Design",arch:"GNN (AtomNet)",strengths:"High throughput virtual screening",limits:"Requires curated chemical libraries"}
+];
+
+function renderWorkflow(){
+  const key=document.getElementById('wf-select').value;
+  const data=workflows[key];
+  const grid=document.getElementById('workflow-grid');
+  grid.innerHTML=Object.entries(data.steps).map(([step,tools])=>`
+    <div class="wf-card">
+      <div class="wf-step">${step}</div>
+      <div class="wf-tools">${tools.map(t=>`<span class="tool-pill">${t}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+function renderBiomarkers(){
+  const filter=document.getElementById('bm-filter').value;
+  const rows=filter==='all'?biomarkers:biomarkers.filter(r=>r.organ.includes(filter));
+  document.getElementById('bm-body').innerHTML=rows.map(r=>`
+    <tr>
+      <td>${r.organ}</td>
+      <td>${r.markers.map(m=>`<span class="marker-tag">${m}</span>`).join('')}</td>
+      <td>${r.detection}</td>
+      <td>${r.db.map(d=>`<span class="db-tag">${d}</span>`).join('')}</td>
+    </tr>`).join('');
+}
+
+function renderCompetitors(){
+  document.getElementById('comp-list').innerHTML=competitors.map(c=>`
+    <div class="comp-card">
+      <div class="comp-header">
+        <span class="comp-name">${c.name}</span>
+        <span class="comp-funding">${c.funding}</span>
+      </div>
+      <div class="comp-focus">${c.focus}</div>
+      <div class="comp-products">${c.products.map(p=>`<span class="prod-pill">${p}</span>`).join('')}</div>
+      <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:8px">${c.note}</div>
+    </div>`).join('');
+}
+
+function renderLLMs(){
+  document.getElementById('llm-body').innerHTML=llms.map(l=>`
+    <tr>
+      <td style="font-weight:500">${l.name}</td>
+      <td><span class="db-tag">${l.cat}</span></td>
+      <td style="font-size:12px;color:var(--color-text-secondary)">${l.arch}</td>
+      <td style="font-size:12px">${l.strengths}</td>
+      <td style="font-size:12px;color:var(--color-text-secondary)">${l.limits}</td>
+    </tr>`).join('');
+}
+
+const titles={workflows:"Bioinformatics Workflows",biomarkers:"Tumor Biomarker Reference",competitors:"Competitor Landscape",llms:"GenAI Models in Bioinformatics"};
+const badges={workflows:"8 workflows",biomarkers:"12 cancer types",competitors:"5 companies",llms:"5 models"};
+
+function switchSection(id,el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  document.getElementById('section-title').textContent=titles[id];
+  document.getElementById('section-badge').textContent=badges[id];
+}
+
+renderWorkflow();
+renderBiomarkers();
+renderCompetitors();
+renderLLMs();
+</script>
