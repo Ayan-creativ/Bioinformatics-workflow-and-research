@@ -1,0 +1,406 @@
+
+<h2 class="sr-only">BioNotion — bioinformatics research dashboard replicating the Google Sheets layout with workflows, biomarkers, biological databases, and LLMs panels</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1a3a5c;--navy-dark:#112641;--navy-text:#e8f0f8;
+  --orange:#c8651a;--orange-bg:#f5e6d3;--orange-border:#c8651a;
+  --olive:#5a6e2a;--olive-bg:#d4e0a0;--olive-light:#e8f0c8;
+  --yellow:#e8c840;--yellow-bg:#fef9e0;--yellow-dark:#b8980a;
+  --blue-head:#2a5fa8;--blue-light:#dce8f8;--blue-mid:#4a7fc4;
+  --gray-row:#f4f6f8;--gray-alt:#eaecf0;
+  --border:#b0b8c8;--border-light:#d0d8e4;
+  --text:#1a1a2e;--text-muted:#5a6278;--text-light:#8a92a8;
+}
+body{font-family:'Times New Roman',Times,serif;font-size:13px;color:var(--text);background:transparent}
+.sheet{display:grid;grid-template-columns:260px 1fr;min-height:560px;border:1px solid var(--border);background:#f8f9fb}
+
+/* LEFT PANEL */
+.left-panel{background:#f0f2f6;border-right:1px solid var(--border);display:flex;flex-direction:column}
+.workflows-btn{background:var(--olive-bg);border:1px solid var(--olive);color:var(--olive);padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;margin:6px 8px 2px;border-radius:2px;font-family:inherit;letter-spacing:0.02em}
+.workflows-btn:hover{background:var(--olive-light)}
+.left-top{padding:8px}
+.main-dropdown-wrapper{margin-bottom:8px}
+.main-dropdown-label{background:var(--navy);color:var(--navy-text);font-weight:700;font-size:12px;padding:5px 10px;border:1px solid var(--orange-border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:'Times New Roman',serif}
+.main-dropdown-label select{background:transparent;border:none;color:var(--navy-text);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;width:100%;-webkit-appearance:none;appearance:none}
+.dropdown-arrow{color:var(--orange);font-size:14px;pointer-events:none;margin-left:4px}
+.select-wrap{position:relative;flex:1}
+.select-wrap::after{content:'▼';position:absolute;right:0;top:50%;transform:translateY(-50%);color:var(--orange);font-size:10px;pointer-events:none}
+.select-wrap select{width:100%;padding-right:16px}
+
+.purpose-box{background:#fff;border:1px solid var(--border-light);padding:8px 10px;margin-bottom:8px;font-size:11.5px;line-height:1.5}
+.purpose-title{font-weight:700;font-size:12px;margin-bottom:4px;color:var(--text)}
+.purpose-rule{font-weight:700;margin:6px 0 3px}
+.purpose-text{color:var(--text-muted)}
+
+.visual-dropdown-wrapper{margin-top:auto;padding:8px;border-top:1px solid var(--border-light)}
+.vis-select-box{border:2px solid var(--orange-border);background:#fff;padding:4px 8px;display:flex;align-items:center;justify-content:space-between}
+.vis-select-box select{border:none;font-size:12px;font-weight:700;font-family:'Times New Roman',serif;background:transparent;cursor:pointer;outline:none;width:100%;-webkit-appearance:none}
+.vis-label{font-weight:700;font-size:12.5px;color:var(--text);margin-right:4px}
+
+/* RIGHT PANEL */
+.right-panel{display:flex;flex-direction:column;overflow:hidden}
+.right-top{background:var(--olive-bg);border-bottom:1px solid var(--border);padding:4px 10px;display:flex;align-items:center;gap:10px}
+.workflows-nav{background:var(--olive);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;cursor:pointer;border:none;font-family:inherit;border-radius:1px}
+.wf-dropdown-inline{font-size:12px;font-weight:700;padding:3px 8px;border:1px solid var(--olive);background:var(--olive-light);font-family:inherit;cursor:pointer;border-radius:1px;color:var(--olive)}
+
+.content-area{display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden}
+.panel{overflow-y:auto;border-left:1px solid var(--border)}
+.panel:first-child{border-left:none}
+
+/* Section header */
+.section-header{background:var(--blue-head);color:#fff;font-weight:700;font-size:13px;padding:6px 10px;text-align:center;border-bottom:1px solid #1a4a88;font-family:'Times New Roman',serif}
+.section-subhead{background:var(--blue-light);display:grid;font-size:11px;font-weight:700;color:var(--navy-dark);border-bottom:1px solid var(--border)}
+
+/* Tables */
+.bio-table{width:100%;border-collapse:collapse;font-size:12px}
+.bio-table th{background:var(--blue-light);color:var(--navy-dark);font-weight:700;padding:5px 8px;border:0.5px solid var(--border);text-align:center;font-size:11px}
+.bio-table td{padding:5px 8px;border:0.5px solid var(--border-light);vertical-align:top;line-height:1.4}
+.bio-table tr:nth-child(even) td{background:var(--gray-row)}
+.bio-table tr:hover td{background:#e4edf8}
+.cat-divider td{background:#c8d8ee!important;font-weight:700;font-size:11px;color:var(--navy-dark);text-align:center;letter-spacing:0.06em;padding:3px 8px;border:0.5px solid var(--border)}
+.organ-cell{font-weight:700;font-size:11.5px}
+.marker-span{display:inline-block;background:var(--blue-light);color:var(--navy-dark);border:0.5px solid var(--blue-mid);border-radius:2px;padding:1px 5px;margin:1px;font-size:11px}
+.db-span{display:inline-block;background:var(--yellow-bg);color:#7a6010;border:0.5px solid #d4a820;border-radius:2px;padding:1px 5px;margin:1px;font-size:10px}
+.link-cell a{color:var(--blue-mid);font-size:10px;word-break:break-all}
+
+/* Workflow panel */
+.wf-title{background:var(--navy);color:#fff;font-weight:700;padding:5px 10px;font-size:12px;text-align:center;border-bottom:1px solid var(--border)}
+.wf-table{width:100%;border-collapse:collapse;font-size:12px}
+.wf-table th{background:#d4e8b0;color:var(--olive);font-weight:700;padding:5px 8px;border:0.5px solid var(--border);text-align:center;font-size:11px}
+.wf-table td{padding:5px 8px;border:0.5px solid var(--border-light);vertical-align:top}
+.wf-table tr:nth-child(even) td{background:var(--gray-row)}
+.tool-chip{display:inline-block;background:#e8f0fb;border:0.5px solid var(--blue-mid);border-radius:2px;padding:1px 5px;margin:1px 2px;font-size:10.5px;color:var(--navy-dark)}
+.step-cell{font-weight:700;font-size:11.5px;color:var(--navy)}
+.wf-footer{padding:6px 10px;background:var(--gray-row);border-top:1px solid var(--border);font-size:11px}
+.wf-link{color:var(--blue-mid);cursor:pointer;text-decoration:none;display:block;padding:1px 0}
+
+/* Index row */
+.index-row{background:var(--yellow);color:var(--yellow-dark);font-weight:700;font-size:12px;padding:4px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.index-label{font-weight:700;font-size:12px}
+.index-desc{font-size:11px;font-weight:400;color:#5a4800}
+
+/* LLM table */
+.llm-arch{font-size:10px;color:var(--text-muted);font-style:italic}
+.strength{font-size:10.5px;color:#2a6a2a}
+.limit{font-size:10.5px;color:#8a2020}
+
+/* hide/show */
+.panel-view{display:none}
+.panel-view.active{display:block}
+</style>
+
+<div class="sheet">
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="left-top">
+      <div class="main-dropdown-wrapper">
+        <div class="main-dropdown-label">
+          <div class="select-wrap">
+            <select id="main-select" onchange="switchView(this.value)">
+              <option value="biomarkers">Detailed Biomarkers</option>
+              <option value="databases">Biological databases used for Foundation Models</option>
+              <option value="workflows">Bioinformatics WorkFlows</option>
+              <option value="llms">LLMs</option>
+              <option value="proteomics">Proteomics</option>
+              <option value="pipelines">Nextflow Pipeline</option>
+            </select>
+          </div>
+          <span class="dropdown-arrow">▼</span>
+        </div>
+      </div>
+
+      <div class="purpose-box">
+        <div class="purpose-title">Quick Access Sheet</div>
+        <div class="purpose-title" style="margin-top:4px">Purpose:</div>
+        <div class="purpose-text">This sheet is designed for quickly retrieving and viewing relevant data.</div>
+        <div class="purpose-text" style="margin-top:4px">It should NOT be used to modify new entries &amp; No Manual edits should be made in this sheet.</div>
+        <div class="purpose-rule">Rules: <em>75% Size recommended</em></div>
+        <div class="purpose-text">Users can select from the dropdowns to dynamically change the displayed table &amp; Respective Images.</div>
+        <div class="purpose-text" style="margin-top:4px">All data modifications must be performed in the designated update sections.</div>
+      </div>
+    </div>
+
+    <div class="visual-dropdown-wrapper">
+      <div class="vis-select-box">
+        <span class="vis-label">Visuals</span>
+        <div class="select-wrap" style="flex:1">
+          <select id="vis-select" style="font-weight:700">
+            <option>Biomarker</option>
+            <option>Workflow Diagram</option>
+            <option>Database Map</option>
+          </select>
+        </div>
+        <span class="dropdown-arrow">▼</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="right-top">
+      <button class="workflows-nav">⟵⟵⟵ Workflows</button>
+      <div class="select-wrap" style="width:160px">
+        <select id="wf-inline" class="wf-dropdown-inline" onchange="switchWF(this.value)" style="width:100%">
+          <option value="metagenomics">Metagenomics</option>
+          <option value="metatranscriptomics">Metatranscriptomics</option>
+          <option value="ngs">NGS</option>
+          <option value="network">Network Analysis</option>
+          <option value="systems">System Biology</option>
+          <option value="synthetic">Synthetic Biology</option>
+          <option value="genetic">Genetic Engineering</option>
+          <option value="vcf">VCF</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden">
+
+      <!-- LEFT DATA PANEL -->
+      <div style="overflow-y:auto;border-right:1px solid var(--border)">
+
+        <!-- BIOMARKERS VIEW -->
+        <div class="panel-view active" id="view-biomarkers">
+          <div class="index-row">
+            <span class="index-label">Index</span>
+            <span class="index-desc">Organ/System → Tumor Markers → Detection Methods → Databases</span>
+          </div>
+          <div class="section-header">Detailed Biomarkers<br><span style="font-size:11px;font-weight:400">Tumor Markers by Organ/System</span></div>
+          <table class="bio-table">
+            <thead><tr><th>Organ/System</th><th>Tumor Markers</th><th>Detection Methods</th><th>Databases</th></tr></thead>
+            <tbody id="bm-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- DATABASES VIEW -->
+        <div class="panel-view" id="view-databases">
+          <div class="index-row">
+            <span class="index-label">Index</span>
+            <span class="index-desc">A catalog of major biological databases (e.g., UniProt, PDB, ENSEMBL) that support the training and development of foundation models</span>
+          </div>
+          <div class="section-header">Biological databases used<br>for Foundation Models</div>
+          <table class="bio-table">
+            <thead><tr><th>Database</th><th>Description</th><th>Web Link</th></tr></thead>
+            <tbody id="db-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- LLMs VIEW -->
+        <div class="panel-view" id="view-llms">
+          <div class="index-row"><span class="index-label">Index</span><span class="index-desc">Foundation models &amp; LLMs used in bioinformatics research</span></div>
+          <div class="section-header">LLMs &amp; Foundation Models</div>
+          <table class="bio-table">
+            <thead><tr><th>Model</th><th>Architecture</th><th>Fields</th><th>Strengths</th><th>Limitations</th></tr></thead>
+            <tbody id="llm-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- PROTEOMICS VIEW -->
+        <div class="panel-view" id="view-proteomics">
+          <div class="index-row"><span class="index-label">Index</span><span class="index-desc">Drug development workflow from protein targets</span></div>
+          <div class="section-header">Bioinformatics &amp; Chemoinformatics Workflow<br><span style="font-size:11px;font-weight:400">Drug Development from Protein Targets</span></div>
+          <table class="bio-table">
+            <thead><tr><th>Step</th><th>Description</th><th>Tools</th><th>Timeline</th></tr></thead>
+            <tbody id="prot-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- PIPELINES VIEW -->
+        <div class="panel-view" id="view-pipelines">
+          <div class="index-row"><span class="index-label">Index</span><span class="index-desc">Nextflow pipeline — bulk RNA-seq workflow breakdown</span></div>
+          <div class="section-header">Nextflow Pipeline<br><span style="font-size:11px;font-weight:400">Bulk RNA-seq Comprehensive Workflow</span></div>
+          <table class="bio-table">
+            <thead><tr><th>Section</th><th>Tools (in sequence)</th><th>Purpose</th></tr></thead>
+            <tbody id="pipe-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- WORKFLOWS LIST VIEW -->
+        <div class="panel-view" id="view-workflows">
+          <div class="index-row"><span class="index-label">Index</span><span class="index-desc">Select a workflow from the top dropdown to view its pipeline</span></div>
+          <div class="section-header">Bioinformatics WorkFlows</div>
+          <table class="bio-table">
+            <thead><tr><th>Workflow</th><th>Steps</th></tr></thead>
+            <tbody>
+              <tr><td class="organ-cell">NGS</td><td>Data Analysis, Alignment, Variant Calling, Assembly, Annotation</td></tr>
+              <tr><td class="organ-cell">Metagenomics</td><td>Preprocessing, Assembly, Quantification, Functional Annotation, Pathway Analysis</td></tr>
+              <tr><td class="organ-cell">Metatranscriptomics</td><td>Preprocessing, Assembly, Quantification, Functional Annotation, Pathway Analysis</td></tr>
+              <tr><td class="organ-cell">Network Analysis</td><td>Network Visualization, Graph Analysis, Functional Enrichment, Dynamic Modeling</td></tr>
+              <tr><td class="organ-cell">System Biology</td><td>Modeling Tools, Pathway Databases, Simulation, Omics Integration</td></tr>
+              <tr><td class="organ-cell">Synthetic Biology</td><td>Design Tools, Simulation &amp; Modeling, DNA Assembly, Pathway Design</td></tr>
+              <tr><td class="organ-cell">Genetic Engineering</td><td>Design &amp; Simulation, CRISPR Tools, Primer Design, Cloning Tools</td></tr>
+              <tr><td class="organ-cell">VCF Analysis</td><td>VCF Manipulation, Annotation, Visualization, Comparative Analysis</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RIGHT WORKFLOW PANEL -->
+      <div style="overflow-y:auto">
+        <div id="wf-panel"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const biomarkers=[
+  {organ:"Thyroid",markers:["CEA","Thyroglobulin"],detection:"Blood test (serum marker analysis)",db:["CGMD","TCGA"]},
+  {organ:"Lung",markers:["CEA","CA-125","Cyfra 21-1"],detection:"Blood test, biopsy, imaging (e.g., CT)",db:["CPTAC","ICGC"]},
+  {organ:"Breast (in females)",markers:["CEA","CA 15-3"],detection:"Blood test, imaging (mammography/ultrasound)",db:["CGMD","KEGG","UniProtKB"]},
+  {organ:"Esophagus",markers:["CEA","CSS"],detection:"Blood test, endoscopy",db:["TCGA Esophageal","COSMIC"]},
+  {organ:"Liver/Bile Duct",markers:["CEA","AFP","CA 19-9"],detection:"Blood test, imaging (e.g., ultrasound/CT)",db:["HCCDB","CGMD"]},
+  {organ:"Stomach/Pancreas",markers:["CEA","CA 19-9","CA 72-4"],detection:"Blood test, endoscopy, imaging",db:["TCGA Stomach","Pancreatic Expression DB"]},
+  {organ:"Colorectal",markers:["CEA","CA 19-9","M2-PK"],detection:"Blood test, stool test (M2-PK), colonoscopy",db:["CPTAC Colorectal"]},
+  {organ:"Ovaries (in females)",markers:["CA-125","CA 72-4"],detection:"Blood test, pelvic ultrasound",db:["TCGA Ovarian"]},
+  {organ:"Uterus (in females)",markers:["CEA","CA-125","SCC"],detection:"Blood test, pelvic ultrasound",db:["CGMD"]},
+  {organ:"Prostate (in males)",markers:["PSA","FPSA and ratio"],detection:"Blood test (PSA levels), digital rectal exam",db:["Prostate Cancer Transcriptome Atlas"]},
+  {organ:"Testicle (in males)",markers:["AFP","BHCG"],detection:"Blood test, ultrasound",db:["CGMD"]},
+  {organ:"Metastasis to Bone",markers:["CEA"],detection:"Blood test, bone scan",db:["COSMIC"]}
+];
+
+const databases=[
+  {cat:"GENOMICS"},
+  {name:"TCGA",desc:"Database of cancer genome atlas varieties.",link:"https://www.cancer.gov/ccg/research/genome-sequencing/tcga"},
+  {name:"TargetFinder",desc:"Database of promoter-enhancer interaction pairs.",link:"https://github.com/shwhalen/targetfinder"},
+  {name:"ArrayExpress",desc:"Database of the high-throughput functional genomics data.",link:"https://www.ebi.ac.uk/biostudies/arrayexpress"},
+  {cat:"TRANSCRIPTOMICS"},
+  {name:"GEO",desc:"Database of public functional genomics data.",link:"https://www.ncbi.nlm.nih.gov/geo/"},
+  {name:"ENCODE",desc:"Database of functional elements in the human genome.",link:"https://www.encodeproject.org/"},
+  {cat:"PROTEOMICS"},
+  {name:"UniProt",desc:"Database of protein sequences and functions.",link:"https://www.uniprot.org/"},
+  {name:"PDB",desc:"Database of 3D structural data for large biological molecules.",link:"https://www.rcsb.org/"},
+  {cat:"DRUG"},
+  {name:"ChEMBL",desc:"Database of bioactive compounds with drug-like properties.",link:"https://www.ebi.ac.uk/chembl/"},
+  {name:"ZINC",desc:"Database of commercially available compounds.",link:"https://zinc15.docking.org/"},
+  {name:"PubChem",desc:"Database of freely available chemical information.",link:"https://pubchem.ncbi.nlm.nih.gov/"},
+  {cat:"SINGLE CELL"},
+  {name:"Single-cell Expression Atlas",desc:"Database of single-cell gene expression across species.",link:"https://www.ebi.ac.uk/gxa/sc/home"},
+  {name:"Human Cell Atlas",desc:"Database of the multi-omic human cell atlas.",link:"https://www.humancellatlas.org/"}
+];
+
+const llms=[
+  {name:"AlphaFold (DeepMind)",arch:"Transformer / Evoformer",fields:"Protein Structure",strength:"High accuracy, generalizes to unknown proteins",limit:"Computationally expensive, struggles with disordered proteins"},
+  {name:"ESMFold (Meta)",arch:"Masked Language Model (MLM)",fields:"Protein Folding",strength:"Faster than physics-based methods like Rosetta",limit:"May lack interpretability for complex domains"},
+  {name:"RoseTTAFold",arch:"Transformer-based deep learning",fields:"Protein Prediction",strength:"Open-source, high accuracy on diverse sequences",limit:"Slower than ESMFold for large-scale inference"},
+  {name:"Atomwise (AtomNet)",arch:"Graph Neural Network (GNN)",fields:"Drug Discovery",strength:"High throughput virtual screening",limit:"Requires curated chemical libraries"},
+  {name:"Insilico Medicine",arch:"GNN + Reinforcement Learning",fields:"Drug Molecule Design",strength:"Faster drug candidate discovery, cost-effective",limit:"Requires extensive validation, prone to bias"},
+  {name:"BioGPT (Microsoft)",arch:"GPT Transformer",fields:"Biomedical NLP",strength:"Biomedical literature understanding, entity extraction",limit:"Limited to text, no structural biology"},
+  {name:"scBERT",arch:"BERT Transformer",fields:"Single-cell Analysis",strength:"Cell-type annotation, gene expression analysis",limit:"Requires large single-cell datasets"}
+];
+
+const proteomics=[
+  {step:"1.0 Protein Target ID",desc:"Identify protein targets in disease pathways using protein-DNA interaction data",tools:"DeepPBS, PeSTo, KEGG, STRING",time:"2–3 days"},
+  {step:"2.0 Target Validation",desc:"Validate biological relevance using functional and expression data",tools:"UniProt, Gene Ontology, DAVID, RNA-Seq",time:"3–4 days"},
+  {step:"3.0 Protein Structure Modeling",desc:"Model 3D structure of validated targets for drug binding analysis",tools:"RoseTTAFold2NA, AlphaFold",time:"3–5 days"},
+  {step:"4.0 Small Molecule Library",desc:"Retrieve and preprocess small molecules for screening",tools:"PubChem, ZINC, RDKit",time:"2–3 days"},
+  {step:"5.0 Virtual Screening",desc:"Screen small molecules for binding to protein targets",tools:"AutoDock Vina, Schrödinger Glide",time:"4–6 days"},
+  {step:"6.0 ADMET Prediction",desc:"Predict absorption, distribution, metabolism, excretion, toxicity",tools:"SwissADME, pkCSM",time:"2–3 days"},
+  {step:"7.0 Lead Optimization",desc:"Optimize lead compounds for drug-like properties",tools:"RDKit, Schrödinger, OpenBabel",time:"5–7 days"}
+];
+
+const pipelines=[
+  {sec:"1. Pre-processing",tools:"cat → FastQC → infer strandness (Salmon) → UMI-tools → FastP → Trim Galore → SortMeRNA → BBSplit",purpose:"Concatenates raw FASTQ, quality check, strand inference, UMI extraction, adapter trimming, rRNA removal"},
+  {sec:"2. Genome Alignment & Quantification",tools:"STAR → HISAT2 → featureCounts / HTSeq → Salmon / kallisto",purpose:"Aligns reads to reference genome, quantifies gene/transcript expression"},
+  {sec:"3. Differential Expression",tools:"DESeq2 → edgeR → limma-voom",purpose:"Identifies statistically significant expression differences between conditions"},
+  {sec:"4. Normalization",tools:"DESeq2 median-of-ratios → TMM (edgeR) → TPM/FPKM",purpose:"Adjusts for sequencing depth and library size differences"},
+  {sec:"5. Functional Annotation",tools:"clusterProfiler → GSEA → DAVID → g:Profiler",purpose:"Gene ontology enrichment, pathway analysis, functional classification"},
+  {sec:"6. Visualization",tools:"ggplot2 → pheatmap → EnhancedVolcano → Seurat (scRNA)",purpose:"Heatmaps, volcano plots, PCA plots, single-cell UMAP"}
+];
+
+const workflows={
+  metagenomics:{title:"Meta-genomics Workflow",steps:{"Preprocessing":["SortMeRNA","Trimmomatic","Fastp"],"Assembly":["Trinity","MEGAHIT"],"Quantification":["Salmon","Kallisto","RSEM"],"Functional Annotation":["eggNOG-mapper","KEGG Mapper","InterProScan"],"Pathway Analysis":["Metacyc","MapMan"]}},
+  metatranscriptomics:{title:"Meta-transcriptomics Workflow",steps:{"Preprocessing":["SortMeRNA","Trimmomatic","Fastp"],"Assembly":["Trinity","MEGAHIT"],"Quantification":["Salmon","Kallisto","RSEM"],"Functional Annotation":["eggNOG-mapper","KEGG Mapper","InterProScan"],"Pathway Analysis":["Metacyc","MapMan"]}},
+  ngs:{title:"NGS (Next-Generation Sequencing) Workflow",steps:{"Data Analysis":["FASTQC","MultiQC","Trimmomatic","Cutadapt"],"Alignment":["BWA","Bowtie2","STAR","HISAT2"],"Variant Calling":["GATK","FreeBayes","SAMtools"],"Assembly":["SPAdes","MEGAHIT","SOAPdenovo"],"Annotation":["Prokka","RAST","SnpEff"]}},
+  network:{title:"Network Analysis Workflow",steps:{"Network Visualization":["Cytoscape","Gephi"],"Graph Analysis":["igraph (R/Python)","NetworkX (Python)"],"Functional Enrichment":["STRING","GeneMANIA"],"Dynamic Modeling":["Pajek","BioGRID"]}},
+  systems:{title:"Systems Biology Workflow",steps:{"Modeling Tools":["COPASI","CellDesigner","MATLAB SimBiology"],"Pathway Databases":["KEGG","Reactome","BioCyc"],"Simulation":["SBML","VCell","OpenSim"],"Omics Integration":["MetaboAnalyst","Cytoscape (ClueGO)"]}},
+  synthetic:{title:"Synthetic Biology Workflow",steps:{"Design Tools":["BioCAD","Gene Designer","TinkerCell"],"Simulation & Modeling":["iBioSim","SynBioSS","COPASI"],"DNA Assembly":["Golden Gate Assembly","Gibson Assembly"],"Pathway Design":["SBOL","SBW"]}},
+  genetic:{title:"Genetic Engineering Workflow",steps:{"Design & Simulation":["Benchling","Geneious","SnapGene"],"CRISPR Tools":["CRISPResso","CHOPCHOP","Cas-OFFinder"],"Primer Design":["Primer3","OligoAnalyzer"],"Cloning Tools":["ApE","PlasMapper"]}},
+  vcf:{title:"VCF Analysis Workflow",steps:{"VCF Manipulation":["VCFtools","BCFtools"],"Annotation":["ANNOVAR","SnpEff","VEP"],"Visualization":["IGV","JBrowse"],"Comparative Analysis":["bedtools","GATK"]}}
+};
+
+function renderBiomarkers(){
+  document.getElementById('bm-tbody').innerHTML=biomarkers.map(r=>`
+    <tr>
+      <td class="organ-cell">${r.organ}</td>
+      <td>${r.markers.map(m=>`<span class="marker-span">${m}</span>`).join(' ')}</td>
+      <td style="font-size:11px">${r.detection}</td>
+      <td>${r.db.map(d=>`<span class="db-span">${d}</span>`).join(' ')}</td>
+    </tr>`).join('');
+}
+
+function renderDatabases(){
+  document.getElementById('db-tbody').innerHTML=databases.map(r=>{
+    if(r.cat) return `<tr class="cat-divider"><td colspan="3">— ${r.cat} —</td></tr>`;
+    return `<tr><td style="font-weight:700;font-size:12px">${r.name}</td><td style="font-size:11px">${r.desc}</td><td class="link-cell"><a href="${r.link}" target="_blank">${r.link.replace('https://','')}</a></td></tr>`;
+  }).join('');
+}
+
+function renderLLMs(){
+  document.getElementById('llm-tbody').innerHTML=llms.map(r=>`
+    <tr>
+      <td style="font-weight:700;font-size:11.5px">${r.name}</td>
+      <td class="llm-arch">${r.arch}</td>
+      <td><span class="db-span">${r.fields}</span></td>
+      <td class="strength">${r.strength}</td>
+      <td class="limit">${r.limit}</td>
+    </tr>`).join('');
+}
+
+function renderProteomics(){
+  document.getElementById('prot-tbody').innerHTML=proteomics.map(r=>`
+    <tr>
+      <td style="font-weight:700;font-size:11px;color:var(--navy)">${r.step}</td>
+      <td style="font-size:11px">${r.desc}</td>
+      <td>${r.tools.split(', ').map(t=>`<span class="tool-chip">${t}</span>`).join(' ')}</td>
+      <td style="font-size:11px;color:var(--olive);font-weight:700">${r.time}</td>
+    </tr>`).join('');
+}
+
+function renderPipelines(){
+  document.getElementById('pipe-tbody').innerHTML=pipelines.map(r=>`
+    <tr>
+      <td style="font-weight:700;font-size:11px;color:var(--navy)">${r.sec}</td>
+      <td>${r.tools.split(' → ').map(t=>`<span class="tool-chip">${t}</span>`).join(' → ')}</td>
+      <td style="font-size:11px">${r.purpose}</td>
+    </tr>`).join('');
+}
+
+function renderWorkflow(key){
+  const wf=workflows[key];
+  if(!wf){document.getElementById('wf-panel').innerHTML='';return;}
+  const rows=Object.entries(wf.steps).map(([step,tools])=>`
+    <tr>
+      <td class="step-cell">${step}</td>
+      <td>${tools.map(t=>`<span class="tool-chip">${t}</span>`).join(' ')}</td>
+    </tr>`).join('');
+  document.getElementById('wf-panel').innerHTML=`
+    <div class="wf-title">${wf.title}</div>
+    <table class="wf-table">
+      <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="wf-footer">
+      <a class="wf-link">🎥 Videos</a>
+      <a class="wf-link">📄 Scientific Papers</a>
+    </div>`;
+}
+
+function switchView(val){
+  document.querySelectorAll('.panel-view').forEach(p=>p.classList.remove('active'));
+  const map={biomarkers:'view-biomarkers',databases:'view-databases',llms:'view-llms',proteomics:'view-proteomics',pipelines:'view-pipelines',workflows:'view-workflows'};
+  const el=document.getElementById(map[val]);
+  if(el) el.classList.add('active');
+}
+
+function switchWF(val){renderWorkflow(val);}
+
+// Init
+renderBiomarkers();
+renderDatabases();
+renderLLMs();
+renderProteomics();
+renderPipelines();
+renderWorkflow('metagenomics');
+</script>
